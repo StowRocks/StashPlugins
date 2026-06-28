@@ -96,7 +96,7 @@ import QRCode from "qrcode";
       </div>
       <label class="stow-qr-name-label">
         Server Name
-        <input type="text" id="stow-qr-name" class="text-input form-control" value="${getServerName()}" />
+        <input type="text" id="stow-qr-name" class="text-input form-control" />
       </label>
       <div id="stow-qr-code"></div>
       <div id="stow-qr-timer" class="stow-qr-timer"></div>
@@ -104,8 +104,13 @@ import QRCode from "qrcode";
     `;
     apiKeyDiv.after(panel);
 
+    // Set the (user-controlled) server name via the DOM property, never via
+    // innerHTML interpolation, so a stored value can't break out and inject markup.
+    const nameInput = panel.querySelector("#stow-qr-name");
+    nameInput.value = getServerName();
+
     panel.querySelector("#stow-qr-hide").addEventListener("click", hideQR);
-    panel.querySelector("#stow-qr-name").addEventListener("change", (e) => {
+    nameInput.addEventListener("change", (e) => {
       setServerName(e.target.value);
       if (qrVisible) showQR();
     });
