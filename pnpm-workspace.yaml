@@ -1,0 +1,11 @@
+packages:
+  - .
+
+strictDepBuilds: true
+
+allowBuilds:
+  esbuild: true
+  lefthook: true
+
+overrides:
+  "readdir-glob>minimatch": 11.0.4
