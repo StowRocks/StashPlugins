@@ -13,5 +13,8 @@ Open findings from the read-only audit, prioritized by impact. This list records
 - [x] **Add automated tests and CI.** CI now enforces formatting, lint, Unicode payload coverage, a reproducible bundle diff check, and a full-history secret scan.
 - [x] **Avoid shell interpolation for git metadata.** `build.js` invokes git with an explicit argument array.
 - [x] **Handle missing API keys and QR-generation failures.** The plugin now refuses empty keys and reports encoder failures to the user.
-- [ ] **Re-evaluate Archiver's minimatch override.** The locked Archiver 8 dependency chain currently applies `minimatch@11.0.4` under `readdir-glob` (whose declared range is `^10.2.2`). Keep verifying compatibility and `pnpm audit` results after upgrades; remove the override only when upstream publishes a patched compatible range.
+- [ ] **Re-evaluate scoped minimatch overrides.** Archiver 8's `readdir-glob`
+      and ESLint 10.14.0's direct/config-array paths still declare vulnerable
+      minimatch 10 ranges. They are pinned narrowly to tested `minimatch@11.0.4`;
+      remove each override when its upstream range accepts a patched release.
 - [ ] Enable the `CI Success` branch rule after this workflow has landed on `main`; GitHub cannot require a status check before it exists on the default branch.
