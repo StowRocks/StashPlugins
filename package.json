@@ -2,18 +2,27 @@
   "name": "stash-plugins",
   "version": "1.0.0",
   "description": "Stash plugins for the Stow ecosystem",
+  "license": "SEE LICENSE IN LICENSE",
   "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
   "scripts": {
     "build": "node build.js",
     "prepare": "husky"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.4.2",
-    "@commitlint/config-conventional": "^20.4.2",
-    "archiver": "^7.0.1",
-    "esbuild": "^0.27.3",
-    "husky": "^9.1.7",
-    "js-yaml": "^4.1.0",
-    "qrcode": "^1.5.4"
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
+    "archiver": "8.0.0",
+    "esbuild": "0.28.2",
+    "husky": "9.1.7",
+    "js-yaml": "5.5.0",
+    "qrcode": "1.5.4"
+  },
+  "overrides": {
+    "readdir-glob": {
+      "minimatch": "11.0.4"
+    }
   }
 }

@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { execSync } from 'child_process';
-import archiver from 'archiver';
-import yaml from 'js-yaml';
+import { ZipArchive } from 'archiver';
+import { dump, load } from 'js-yaml';
 import esbuild from 'esbuild';
 
 const PLUGINS_DIR = './plugins';
@@ -49,12 +49,12 @@ for (const pluginId of pluginDirs) {
 
   // Read manifest
   const manifestContent = fs.readFileSync(manifestPath, 'utf8');
-  const manifest = yaml.load(manifestContent);
+  const manifest = load(manifestContent);
 
   // Create zip (exclude .src.js files)
   const zipPath = path.join(OUTPUT_DIR, `${pluginId}.zip`);
   const output = fs.createWriteStream(zipPath);
-  const archive = archiver('zip', { zlib: { level: 9 } });
+  const archive = new ZipArchive({ zlib: { level: 9 } });
 
   archive.pipe(output);
   archive.glob('**/*', {
@@ -92,7 +92,7 @@ for (const pluginId of pluginDirs) {
 }
 
 // Write index.yml
-const indexYaml = yaml.dump(index);
+const indexYaml = dump(index);
 fs.writeFileSync(path.join(OUTPUT_DIR, 'index.yml'), indexYaml);
 
 console.log(`\n🎉 Built ${index.length} plugin(s) to ${OUTPUT_DIR}/`);
