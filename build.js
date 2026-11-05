@@ -1,13 +1,20 @@
-import fs from 'fs';
-import path from 'path';
-import crypto from 'crypto';
-import { execSync } from 'child_process';
-import { ZipArchive } from 'archiver';
-import { dump, load } from 'js-yaml';
-import esbuild from 'esbuild';
+import fs from "fs";
+import path from "path";
+import crypto from "crypto";
+import { execFileSync } from "child_process";
+import { ZipArchive } from "archiver";
+import { dump, load } from "js-yaml";
+import esbuild from "esbuild";
 
-const PLUGINS_DIR = './plugins';
-const OUTPUT_DIR = '_site';
+const PLUGINS_DIR = "./plugins";
+const OUTPUT_DIR = "_site";
+const sourceTimestamp = Number(
+  process.env.SOURCE_DATE_EPOCH ??
+    execFileSync("git", ["log", "-1", "--format=%ct"], {
+      encoding: "utf8",
+    }).trim(),
+);
+const buildDate = new Date(sourceTimestamp * 1000);
 
 // Clean output directory
 if (fs.existsSync(OUTPUT_DIR)) {
@@ -18,14 +25,15 @@ fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 const index = [];
 
 // Find all plugin manifests
-const pluginDirs = fs.readdirSync(PLUGINS_DIR, { withFileTypes: true })
-  .filter(dirent => dirent.isDirectory())
-  .map(dirent => dirent.name);
+const pluginDirs = fs
+  .readdirSync(PLUGINS_DIR, { withFileTypes: true })
+  .filter((dirent) => dirent.isDirectory())
+  .map((dirent) => dirent.name);
 
 for (const pluginId of pluginDirs) {
   const pluginDir = path.join(PLUGINS_DIR, pluginId);
   const manifestPath = path.join(pluginDir, `${pluginId}.yml`);
-  
+
   if (!fs.existsSync(manifestPath)) {
     console.log(`⚠️  Skipping ${pluginId} - no manifest found`);
     continue;
@@ -34,21 +42,23 @@ for (const pluginId of pluginDirs) {
   console.log(`📦 Processing ${pluginId}...`);
 
   // Bundle .src.js files with esbuild
-  const srcFiles = fs.readdirSync(pluginDir).filter(f => f.endsWith('.src.js'));
+  const srcFiles = fs
+    .readdirSync(pluginDir)
+    .filter((f) => f.endsWith(".src.js"));
   for (const srcFile of srcFiles) {
-    const outFile = srcFile.replace('.src.js', '.js');
+    const outFile = srcFile.replace(".src.js", ".js");
     await esbuild.build({
       entryPoints: [path.join(pluginDir, srcFile)],
       bundle: true,
       minify: true,
-      format: 'iife',
+      format: "iife",
       outfile: path.join(pluginDir, outFile),
     });
     console.log(`  📎 Bundled ${srcFile} → ${outFile}`);
   }
 
   // Read manifest
-  const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+  const manifestContent = fs.readFileSync(manifestPath, "utf8");
   const manifest = load(manifestContent);
 
   // Create zip (exclude .src.js files)
@@ -57,35 +67,48 @@ for (const pluginId of pluginDirs) {
   const archive = new ZipArchive({ zlib: { level: 9 } });
 
   archive.pipe(output);
-  archive.glob('**/*', {
-    cwd: pluginDir,
-    ignore: ['*.src.js'],
-  });
-  
+  archive.glob(
+    "**/*",
+    {
+      cwd: pluginDir,
+      ignore: ["*.src.js"],
+    },
+    { date: buildDate },
+  );
+
   await new Promise((resolve, reject) => {
-    output.on('close', resolve);
-    archive.on('error', reject);
+    output.on("close", resolve);
+    archive.on("error", reject);
     archive.finalize();
   });
 
   // Calculate SHA256
   const fileBuffer = fs.readFileSync(zipPath);
-  const hash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+  const hash = crypto.createHash("sha256").update(fileBuffer).digest("hex");
 
   // Get git hash for versioning
-  const gitHash = execSync(`git log -n 1 --pretty=format:%h -- "${pluginDir}"`, { encoding: 'utf8' }).trim();
+  const gitHash = execFileSync(
+    "git",
+    ["log", "-n", "1", "--pretty=format:%h", "--", pluginDir],
+    {
+      encoding: "utf8",
+    },
+  ).trim();
 
   // Add to index
   index.push({
     id: pluginId,
     name: manifest.name,
     metadata: {
-      description: manifest.description
+      description: manifest.description,
     },
     version: `${manifest.version}-${gitHash}`,
-    date: new Date().toISOString().replace('T', ' ').replace(/\.\d+Z$/, ''),
+    date: buildDate
+      .toISOString()
+      .replace("T", " ")
+      .replace(/\.\d+Z$/, ""),
     path: `${pluginId}.zip`,
-    sha256: hash
+    sha256: hash,
   });
 
   console.log(`✅ ${pluginId} v${manifest.version}`);
@@ -93,6 +116,6 @@ for (const pluginId of pluginDirs) {
 
 // Write index.yml
 const indexYaml = dump(index);
-fs.writeFileSync(path.join(OUTPUT_DIR, 'index.yml'), indexYaml);
+fs.writeFileSync(path.join(OUTPUT_DIR, "index.yml"), indexYaml);
 
 console.log(`\n🎉 Built ${index.length} plugin(s) to ${OUTPUT_DIR}/`);
