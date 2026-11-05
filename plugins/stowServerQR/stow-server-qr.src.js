@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import { encodeServerPayload } from "../../src/qr-payload.js";
 
 (function () {
   "use strict";
@@ -21,6 +22,8 @@ import QRCode from "qrcode";
     hideTimer = null;
     const panel = document.getElementById("stow-qr-panel");
     if (panel) panel.style.display = "none";
+    const code = document.getElementById("stow-qr-code");
+    if (code) code.replaceChildren();
     const btn = document.getElementById("stow-qr-btn");
     if (btn) btn.style.display = "";
     qrVisible = false;
@@ -29,27 +32,38 @@ import QRCode from "qrcode";
   async function showQR() {
     const apiKeyEl = document.querySelector("#apikey .value.text-break");
     const apiKey = apiKeyEl?.textContent?.trim() || "";
+    if (!apiKey) {
+      window.alert("Generate an API key before creating a Stow QR code.");
+      return;
+    }
 
     const nameInput = document.getElementById("stow-qr-name");
     const name = nameInput?.value || getServerName();
     setServerName(name);
 
-    const data = JSON.stringify({
+    const data = {
       name,
       url: location.origin,
       apiKey,
-    });
+    };
 
-    const qrContent = "stow://add-server?data=" + btoa(data);
+    const qrContent = "stow://add-server?data=" + encodeServerPayload(data);
 
     const codeEl = document.getElementById("stow-qr-code");
     codeEl.innerHTML = "";
 
-    const canvas = await QRCode.toCanvas(qrContent, {
-      width: 256,
-      margin: 2,
-      errorCorrectionLevel: "H",
-    });
+    let canvas;
+    try {
+      canvas = await QRCode.toCanvas(qrContent, {
+        width: 256,
+        margin: 2,
+        errorCorrectionLevel: "H",
+      });
+    } catch (error) {
+      console.error("Failed to generate the Stow QR code", error);
+      window.alert("The QR code could not be generated.");
+      return;
+    }
     codeEl.appendChild(canvas);
 
     document.getElementById("stow-qr-panel").style.display = "";
@@ -77,7 +91,9 @@ import QRCode from "qrcode";
 
     // Find the button container (same div as Generate/Clear buttons)
     const buttons = apiKeyDiv.querySelectorAll("button");
-    const btnContainer = buttons.length ? buttons[0].parentElement : apiKeyDiv.querySelector("div:last-child");
+    const btnContainer = buttons.length
+      ? buttons[0].parentElement
+      : apiKeyDiv.querySelector("div:last-child");
     const btn = document.createElement("button");
     btn.id = "stow-qr-btn";
     btn.className = "btn btn-primary stow-qr-btn";

@@ -22,7 +22,7 @@ After Base64 decoding, `data` contains JSON with these fields:
 
 The plugin reads the API key from the rendered value in the Stash Security settings page DOM. It does not read the server's configuration file. The QR payload contains the API key in clear form after Base64 decoding; Base64 is not encryption.
 
-The current implementation uses browser `btoa` on the JSON string. Names with characters outside Latin-1 can make QR generation fail. A UTF-8-safe encoding fix is tracked in [`TODO.md`](TODO.md).
+The implementation encodes the JSON payload as UTF-8 before Base64, so Unicode server names are supported. The payload still contains a reusable API key and must be handled as a credential.
 
 ## Register the URL scheme
 
