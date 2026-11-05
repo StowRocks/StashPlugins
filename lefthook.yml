@@ -1,0 +1,19 @@
+commit-msg:
+  commands:
+    conventional-commits:
+      run: sh scripts/hooks/check-commit-message.sh {1}
+pre-commit:
+  parallel: true
+  commands:
+    secrets:
+      run: gitleaks git --pre-commit --redact --staged --verbose
+    format:
+      glob: "*.{js,json,md,yaml,yml}"
+      run: pnpm exec prettier --check {staged_files}
+    lint:
+      glob: "*.js"
+      run: pnpm exec eslint {staged_files}
+pre-push:
+  commands:
+    quality:
+      run: pnpm lint && pnpm test && pnpm build:check
