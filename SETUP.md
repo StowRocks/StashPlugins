@@ -1,94 +1,31 @@
-# StashPlugins Setup Complete ✅
+# StashPlugins Repository
 
-## What's Been Created
+## Repository and published feed
 
-### Repository Structure
-```
-~/Source/StashPlugins/
-├── plugins/stowServerQR/     # Plugin files
-├── build.js                  # Node.js build script
-├── package.json              # Dependencies & scripts
-├── vercel.json               # Vercel deployment config
-└── README.md                 # Documentation
-```
+- GitHub repository: [StowRocks/StashPlugins](https://github.com/StowRocks/StashPlugins)
+- Plugin source feed: <https://plugins.stow.rocks/index.yml>
+- Plugin archive: <https://plugins.stow.rocks/stowServerQR.zip>
+- The Vercel project configuration builds the repository into `_site/`; the domain is `plugins.stow.rocks`.
 
-### DNS Configuration
-- ✅ `plugins.stow.rocks` → `cname.vercel-dns.com`
-- Cloudflare DNS record created
+The plugin manifest links to the GitHub repository above. To install it in Stash, add `https://plugins.stow.rocks/index.yml` under **Settings → Plugins → Available Plugins** and reload the source.
 
-## Next Steps
+## Local development
 
-### 1. Create GitHub Repository
+Use Node.js 26, as recorded in `.nvmrc` and `package.json`:
+
 ```bash
-cd ~/Source/StashPlugins
-gh repo create StashPlugins --public --source=. --remote=origin
-git push -u origin main
-```
-
-### 2. Deploy to Vercel
-1. Go to https://vercel.com/new
-2. Import `StashPlugins` repository
-3. Vercel auto-detects settings from `vercel.json`
-4. Add custom domain: `plugins.stow.rocks`
-5. Deploy!
-
-### 3. Test Installation in Stash
-1. Open Stash → Settings → Plugins → Available Plugins
-2. Click "Add Source"
-3. Enter: `https://plugins.stow.rocks/index.yml`
-4. Click "Reload"
-5. Install "StowServerQR"
-
-### 4. Implement Stow App Integration
-Add to Stow iOS/macOS app:
-
-**Info.plist:**
-```xml
-<key>CFBundleURLTypes</key>
-<array>
-  <dict>
-    <key>CFBundleURLSchemes</key>
-    <array>
-      <string>stow</string>
-    </array>
-  </dict>
-</array>
-```
-
-**Handle URL:**
-```swift
-.onOpenURL { url in
-    if url.scheme == "stow", url.host == "add-server" {
-        // Parse QR data and show add server dialog
-    }
-}
-```
-
-## Plugin Features
-
-- ✅ Auto-detects server URL
-- ✅ Fetches API key from Stash config
-- ✅ Customizable server name
-- ✅ Security warnings
-- ✅ 60-second auto-hide timer
-- ✅ QR code with JSON data
-
-## Testing
-
-Build locally:
-```bash
-cd ~/Source/StashPlugins
+npm install
 npm run build
-# Output in _site/
 ```
 
-## URLs
+The build writes the plugin feed and archive to `_site/`. It also bundles each `*.src.js` file into its corresponding plugin `.js` file.
 
-- Plugin feed: `https://plugins.stow.rocks/index.yml`
-- Plugin zip: `https://plugins.stow.rocks/stowServerQR.zip`
-- GitHub: (create repo)
-- Vercel: (deploy)
+## StowServerQR behavior
 
----
+The plugin adds a QR button to Stash's **Settings → Security** page. It reads the API key from the rendered page DOM; it does not access the Stash server configuration. Its QR content is `stow://add-server?data=<base64-encoded-json>`, where the JSON includes the server name, `location.origin`, and API key. The Stow app must register the `stow` URL scheme and implement the confirmation flow described in [`STOW_APP_INTEGRATION.md`](STOW_APP_INTEGRATION.md).
 
-Ready to push to GitHub and deploy! 🚀
+Base64 does not encrypt the API key. The plugin warns users and visually hides the QR panel after 60 seconds. Open issues, including Unicode-safe encoding and clearing the hidden QR canvas, are listed in [`TODO.md`](TODO.md).
+
+## License status
+
+The project is proprietary. No license is granted except under a separate written agreement; see [LICENSE](LICENSE).

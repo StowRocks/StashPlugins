@@ -20,13 +20,15 @@ Generate a QR code containing your Stash server credentials for easy setup in th
 
 **Features:**
 - Auto-detects server URL
-- Includes API key for authentication
-- Security warnings and auto-hide timer
-- One-scan setup for Stow app
+- Reads the API key displayed in Stash's Security settings page
+- Shows a security warning and visually hides the QR panel after 60 seconds
+- Encodes a `stow://add-server` handoff for the Stow app
 
 [Documentation](plugins/stowServerQR/README.md)
 
 ## Development
+
+Use Node.js 26 (`.nvmrc`):
 
 ```bash
 # Install dependencies
@@ -40,4 +42,4 @@ npm run build
 
 ## License
 
-[GPL-3.0](LICENSE)
+The project is proprietary. No license is granted except under a separate written agreement; see [LICENSE](LICENSE).

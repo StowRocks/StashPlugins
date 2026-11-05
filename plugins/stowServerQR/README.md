@@ -18,20 +18,22 @@ Generate a QR code containing your Stash server credentials for easy setup in th
 2. Find the "📱 Stow QR" button next to "Generate API Key"
 3. Enter a friendly server name
 4. Click **📱 Stow QR** to display the QR code
-5. Scan with your iPhone, iPad, or Mac camera
-6. The Stow app opens and prompts you to add the server
+5. Scan it with a QR reader or a device camera
+6. If Stow has registered the `stow://` URL scheme, the link opens the app; Stow should ask before adding or updating a server
 
 ## Security
 
 ⚠️ The QR code contains your API key. Only scan on devices you trust.
 
 - QR code is hidden by default
-- Auto-hides after 60 seconds
+- Visually hides the panel after 60 seconds
 - Clear security warning displayed
+
+The QR contains the API key in a deep link. Base64 is an encoding, not encryption. The plugin reads the key from the rendered API-key value on Stash's **Settings → Security** page; it does not read the server's configuration file. The hidden QR canvas currently remains in the page DOM after the panel is hidden.
 
 ## QR Code Data Format
 
-The QR code encodes a JSON string with three fields:
+The QR code contains a `stow://` URL. Its `data` query parameter is Base64-encoded JSON with these fields:
 
 ```json
 {
@@ -40,6 +42,14 @@ The QR code encodes a JSON string with three fields:
   "apiKey": "eyJhbGciOiJIUzI1NiIs..."
 }
 ```
+
+The complete QR content has this form:
+
+```text
+stow://add-server?data=<base64-encoded-json>
+```
+
+The current browser implementation uses `btoa` on the JSON string. Server names containing characters outside Latin-1 can make QR generation fail; UTF-8-safe encoding is tracked in [`TODO.md`](../../TODO.md).
 
 | Field    | Type   | Description                                    |
 |----------|--------|------------------------------------------------|
@@ -54,4 +64,4 @@ The QR code encodes a JSON string with three fields:
 
 ## License
 
-MIT
+The plugin is proprietary. No license is granted except under a separate written agreement; see the repository [LICENSE](../../LICENSE).

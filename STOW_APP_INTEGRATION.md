@@ -1,27 +1,33 @@
-# Stow App: QR Code Server Setup Integration
+# Stow App: QR Code Server Setup
 
-## Overview
+The **StowServerQR** Stash plugin adds a button to **Settings → Security**. It creates a `stow://` deep link carrying a server name, URL, and API key. The Stow app must register the URL scheme and handle the link before scanning can open the app.
 
-The **StowServerQR** Stash plugin adds a "📱 Stow QR" button to the Security settings page (Settings → Security), next to the existing "Generate API Key" and "Clear API Key" buttons. Clicking it displays a QR code containing the server's name, URL, and API key.
+## Current plugin payload
 
-The Stow app needs to handle scanning this QR code and automatically adding or updating the server.
+The QR content is a URI, not raw JSON:
 
-## QR Code Data Format
+```text
+stow://add-server?data=<base64-encoded-json>
+```
 
-The QR code contains a JSON string:
+After Base64 decoding, `data` contains JSON with these fields:
+
 ```json
 {
   "name": "My Stash Server",
   "url": "http://192.168.1.10:9999",
-  "apiKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "apiKey": "<Stash API key>"
 }
 ```
 
-## Implementation
+The plugin reads the API key from the rendered value in the Stash Security settings page DOM. It does not read the server's configuration file. The QR payload contains the API key in clear form after Base64 decoding; Base64 is not encryption.
 
-### 1. Register URL Scheme
+The current implementation uses browser `btoa` on the JSON string. Names with characters outside Latin-1 can make QR generation fail. A UTF-8-safe encoding fix is tracked in [`TODO.md`](TODO.md).
 
-Add to the app's `Info.plist`:
+## Register the URL scheme
+
+Add the `stow` scheme to the app's `Info.plist`:
+
 ```xml
 <key>CFBundleURLTypes</key>
 <array>
@@ -36,142 +42,61 @@ Add to the app's `Info.plist`:
 </array>
 ```
 
-### 2. Define QR Payload Model
+## Decode and validate the link
 
-```swift
-struct StowQRPayload: Codable {
-    let name: String
-    let url: String
-    let apiKey: String
-}
-```
-
-### 3. Handle URL in StowApp
-
-Add `.onOpenURL` to `RootView()` in each platform's `StowApp.swift`:
+Add an `.onOpenURL` handler to the app's root view on each platform:
 
 ```swift
 RootView()
     .onOpenURL { url in
-        handleStowURL(url)
+        guard let payload = parseStowURL(url) else { return }
+        presentServerConfirmation(for: payload)
     }
 ```
 
+The following parser validates the link shape, Base64 data, JSON, and server URL. It intentionally leaves persistence to the confirmation flow:
+
 ```swift
-private func handleStowURL(_ url: URL) {
+struct StowQRPayload: Decodable {
+    let name: String
+    let url: String
+    let apiKey: String
+}
+
+func parseStowURL(_ url: URL) -> StowQRPayload? {
     guard url.scheme == "stow",
           url.host == "add-server",
           let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
           let dataParam = components.queryItems?.first(where: { $0.name == "data" })?.value,
           let jsonData = Data(base64Encoded: dataParam),
-          let payload = try? JSONDecoder().decode(StowQRPayload.self, from: jsonData)
-    else { return }
+          let payload = try? JSONDecoder().decode(StowQRPayload.self, from: jsonData),
+          let serverURL = URLComponents(string: payload.url),
+          ["http", "https"].contains(serverURL.scheme?.lowercased() ?? ""),
+          serverURL.host != nil
+    else { return nil }
 
-    // Check if server with same URL already exists
-    let settings = SettingsStore.shared
-    if let existing = settings.servers.first(where: { $0.url == Server.cleanURL(payload.url) }) {
-        // Update existing server
-        var updated = existing
-        updated.update(
-            name: payload.name,
-            url: payload.url,
-            apiKey: payload.apiKey,
-            syncThumbnails: existing.syncThumbnails,
-            syncPreviews: existing.syncPreviews,
-            syncFrequency: existing.syncFrequency,
-            isEnabled: existing.isEnabled
-        )
-        settings.updateServer(updated)
-    } else {
-        // Add new server
-        let server = Server(
-            name: payload.name,
-            url: payload.url,
-            apiKey: payload.apiKey
-        )
-        settings.addServer(server)
-    }
+    return payload
 }
 ```
 
-### 4. Update StowServerQR Plugin QR Data
+Before saving, show the server name and URL, mask the API key, and ask the user whether to add or update the server. Store the API key in the app's secure storage. Do not persist the payload automatically when the link opens.
 
-The plugin currently encodes raw JSON in the QR code. For URL scheme handling, it should encode as:
+## Security and behavior
 
-```
-stow://add-server?data=<base64_encoded_json>
-```
+- Anyone who can read the QR can recover the API key. Scan it only on trusted devices.
+- The plugin displays a warning and visually hides its QR panel after 60 seconds. The generated canvas currently remains in the page DOM after hiding; DOM cleanup is listed in [`TODO.md`](TODO.md).
+- The app should reject malformed payloads and server URLs that do not use HTTP or HTTPS.
+- The QR feature requires an API key to be present on the Security settings page.
 
-This way, when iOS/macOS scans the QR code, it recognizes the `stow://` scheme and opens the Stow app directly.
+## Manual integration checks
 
-### 5. Alternative: Direct JSON Scanning
+1. Confirm the app registers the `stow` URL scheme.
+2. Open Stash → Settings → Security and display the QR code.
+3. Scan it and confirm the app receives `stow://add-server` with a decodable payload.
+4. Verify the app shows a confirmation with the API key masked before adding or updating.
+5. Try malformed Base64, malformed JSON, and a non-HTTP(S) server URL; the app should reject each.
+6. Test a server name containing non-Latin characters after the plugin's UTF-8-safe encoding issue is resolved.
 
-If you prefer not to use a URL scheme, the app can also handle raw JSON QR codes via a dedicated QR scanner view within the app:
+## Repository and license
 
-```swift
-// In a QR scanner view
-func handleScannedCode(_ code: String) {
-    guard let data = code.data(using: .utf8),
-          let payload = try? JSONDecoder().decode(StowQRPayload.self, from: data)
-    else { return }
-
-    // Same add/update logic as above
-}
-```
-
-### 6. Confirmation UI
-
-Show a confirmation dialog before adding/updating:
-
-```
-┌─────────────────────────────────┐
-│  Add Stash Server?              │
-│                                 │
-│  Name: Home Stash               │
-│  URL:  http://192.168.1.10:9999 │
-│  API Key: ****...1234           │
-│                                 │
-│  [Cancel]        [Add Server]   │
-└─────────────────────────────────┘
-
-OR (if URL already exists):
-
-┌─────────────────────────────────┐
-│  Update Existing Server?        │
-│                                 │
-│  Name: Home Stash               │
-│  URL:  http://192.168.1.10:9999 │
-│  API Key: Updated               │
-│                                 │
-│  [Cancel]        [Update]       │
-└─────────────────────────────────┘
-```
-
-## Security Considerations
-
-- Validate URL format (must be `http://` or `https://`)
-- Show masked API key in confirmation UI (last 4 chars only)
-- The plugin already warns users and auto-hides the QR code after 60 seconds
-
-## Existing Stow Models Reference
-
-The `Server` model (`Stow/Models/Server.swift`):
-- `id: UUID`
-- `name: String`
-- `url: String` (auto-cleaned, no trailing slash, no `/graphql`)
-- `apiKey: String` (stored in Keychain via `KeychainManager`)
-- `syncThumbnails: Bool` (default: `true`)
-- `syncPreviews: Bool` (default: `false`)
-- `syncFrequency: SyncFrequency` (default: `.always`)
-- `isEnabled: Bool` (default: `true`)
-
-## Testing
-
-1. Open Stash → Settings → Security
-2. Click "📱 Stow QR" button
-3. Scan QR code with iPhone/iPad camera
-4. Verify Stow app opens with confirmation dialog
-5. Confirm adding server
-6. Verify server appears in Stow's server list
-7. Scan same QR again → verify update flow
-8. Test with invalid/malformed QR data
+Plugin source: [StowRocks/StashPlugins](https://github.com/StowRocks/StashPlugins). The project is proprietary. No license is granted except under a separate written agreement; see [LICENSE](LICENSE).
