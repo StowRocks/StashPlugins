@@ -51,11 +51,11 @@ stow://add-server?data=<base64-encoded-json>
 
 The current browser implementation uses `btoa` on the JSON string. Server names containing characters outside Latin-1 can make QR generation fail; UTF-8-safe encoding is tracked in [`TODO.md`](../../TODO.md).
 
-| Field    | Type   | Description                                    |
-|----------|--------|------------------------------------------------|
-| `name`   | string | User-defined server display name               |
-| `url`    | string | Stash server URL (auto-detected from browser)  |
-| `apiKey` | string | Stash API key (from Settings → Security)       |
+| Field    | Type   | Description                                   |
+| -------- | ------ | --------------------------------------------- |
+| `name`   | string | User-defined server display name              |
+| `url`    | string | Stash server URL (auto-detected from browser) |
+| `apiKey` | string | Stash API key (from Settings → Security)      |
 
 ## Requirements
 

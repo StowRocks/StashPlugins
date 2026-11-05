@@ -19,6 +19,7 @@ Add this plugin source to Stash:
 Generate a QR code containing your Stash server credentials for easy setup in the Stow iOS/macOS app.
 
 **Features:**
+
 - Auto-detects server URL
 - Reads the API key displayed in Stash's Security settings page
 - Shows a security warning and visually hides the QR panel after 60 seconds
@@ -32,10 +33,10 @@ Use Node.js 26 (`.nvmrc`):
 
 ```bash
 # Install dependencies
-npm install
+pnpm install --frozen-lockfile
 
 # Build plugins
-npm run build
+pnpm build
 
 # Output in _site/
 ```
