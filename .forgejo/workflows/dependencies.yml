@@ -1,0 +1,23 @@
+name: Dependencies
+
+on:
+  schedule:
+    - cron: "35 4 * * 1"
+  workflow_dispatch:
+
+jobs:
+  renovate:
+    name: Renovate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: renovate/renovate:44.221.4@sha256:daf2956fdac111ff6bb36e093f42b0b28ce4d3503fa0cb267661216782b47859
+    steps:
+      - name: Update dependencies
+        env:
+          LOG_LEVEL: info
+          RENOVATE_ENDPOINT: https://git.schmieder.eu/api/v1
+          RENOVATE_PLATFORM: gitea
+          RENOVATE_REPOSITORIES: StowRocks/StashPlugins
+          RENOVATE_TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
+        run: renovate
