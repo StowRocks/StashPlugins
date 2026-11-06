@@ -18,11 +18,10 @@
 
 ## Next Steps
 
-### 1. Create GitHub Repository
+### 1. Clone the Canonical Repository
 ```bash
-cd ~/Source/StashPlugins
-gh repo create StashPlugins --public --source=. --remote=origin
-git push -u origin main
+git clone https://git.schmieder.eu/StowRocks/StashPlugins.git
+cd StashPlugins
 ```
 
 ### 2. Deploy to Vercel

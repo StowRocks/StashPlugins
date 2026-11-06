@@ -2,6 +2,11 @@
 
 Stash plugins for the Stow ecosystem, hosted at [plugins.stow.rocks](https://plugins.stow.rocks).
 
+The canonical repository is hosted on
+[git.schmieder.eu](https://git.schmieder.eu/StowRocks/StashPlugins). The
+[GitHub repository](https://github.com/StowRocks/StashPlugins) remains a public
+operational mirror for GitHub Actions.
+
 ## Installation
 
 Add this plugin source to Stash:
