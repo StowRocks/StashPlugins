@@ -26,10 +26,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: pnpm dlx vercel@65.11.0 pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      - run: pnpm dlx vercel@65.11.0 build --prod --token=${{ secrets.VERCEL_TOKEN }}
-      - run: pnpm dlx vercel@65.11.0 deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - run: pnpm dlx vercel@65.11.0 pull --yes --environment=production
+      - run: pnpm dlx vercel@65.11.0 build --prod
+      - run: pnpm dlx vercel@65.11.0 deploy --prebuilt --prod
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
