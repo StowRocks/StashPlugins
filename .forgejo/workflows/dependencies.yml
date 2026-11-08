@@ -16,7 +16,10 @@ jobs:
       - name: Update dependencies
         env:
           LOG_LEVEL: info
-          RENOVATE_ENDPOINT: https://git.schmieder.eu/api/v1
+          # Address Forgejo through the job's server URL: runners on picard reach it
+          # only as http://forgejo:3000, and cloning must use that host as well.
+          RENOVATE_ENDPOINT: ${{ github.server_url }}/api/v1
+          RENOVATE_GIT_URL: endpoint
           RENOVATE_PLATFORM: gitea
           RENOVATE_REPOSITORIES: StowRocks/StashPlugins
           RENOVATE_TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
