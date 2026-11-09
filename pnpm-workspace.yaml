@@ -9,5 +9,5 @@ allowBuilds:
 
 overrides:
   "@eslint/config-array>minimatch": 11.0.4
-  "eslint>minimatch": 11.0.4
+  "eslint>minimatch": 11.0.5
   "readdir-glob>minimatch": 11.0.4
