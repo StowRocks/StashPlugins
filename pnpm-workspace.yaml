@@ -8,6 +8,6 @@ allowBuilds:
   lefthook: true
 
 overrides:
-  "@eslint/config-array>minimatch": 11.0.4
+  "@eslint/config-array>minimatch": 11.0.5
   "eslint>minimatch": 11.0.4
   "readdir-glob>minimatch": 11.0.4
