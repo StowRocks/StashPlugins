@@ -164,6 +164,42 @@ class SettingsTests(unittest.TestCase):
             self.assertTrue(whisparr.configured({}))
 
 
+class ResolveTests(unittest.TestCase):
+    OWN = {"whisparrUrl": "http://own:6969", "whisparrApiKey": "own-key"}
+    OTHER = {"whisparrUrl": "http://other:6969", "whisparrApiKey": "other-key", "whisparrQualityProfile": "4"}
+
+    def test_the_own_settings_win(self):
+        settings, source = whisparr.resolve({"stow": self.OWN, "missingScenes": self.OTHER})
+        self.assertEqual((settings, source), (self.OWN, "stow"))
+
+    def test_the_missing_scenes_plugin_is_used_when_this_one_is_empty(self):
+        settings, source = whisparr.resolve({"stow": {}, "missingScenes": self.OTHER})
+        self.assertEqual(source, "missingScenes")
+        self.assertEqual(settings, {"whisparrUrl": "http://other:6969", "whisparrApiKey": "other-key"})
+        settings, source = whisparr.resolve({"missingScenes": self.OTHER})
+        self.assertEqual(source, "missingScenes")
+
+    def test_address_and_key_are_never_mixed_between_plugins(self):
+        half = {"whisparrUrl": "http://own:6969", "whisparrApiKey": "  "}
+        settings, source = whisparr.resolve({"stow": half, "missingScenes": self.OTHER})
+        self.assertEqual(source, "missingScenes")
+        self.assertEqual(settings["whisparrUrl"], "http://other:6969")
+        settings, source = whisparr.resolve({"stow": half, "missingScenes": {"whisparrUrl": "http://other:6969"}})
+        self.assertIsNone(source)
+        self.assertEqual(settings, half)
+
+    def test_nothing_set_means_no_source(self):
+        self.assertEqual(whisparr.resolve({}), ({}, None))
+
+    def test_read_settings_and_source_follow_the_resolution(self):
+        plugins = {"stow": {}, "missingScenes": self.OTHER}
+        with mock.patch("whisparr.read_all_settings", return_value=plugins):
+            self.assertEqual(whisparr.read_settings({})["whisparrApiKey"], "other-key")
+            self.assertEqual(whisparr.source({}), "missingScenes")
+        with mock.patch("whisparr.read_all_settings", side_effect=OSError("down")):
+            self.assertIsNone(whisparr.source({}))
+
+
 class OperationTests(unittest.TestCase):
     def test_the_operation_reads_the_settings_and_forwards(self):
         with mock.patch("whisparr.read_settings", return_value={"a": 1}) as read:
