@@ -1,6 +1,9 @@
-# StowServerQR
+# Stow
 
-Generate a QR code containing your Stash server credentials for easy setup in the [Stow](https://stow.rocks) iOS/macOS app.
+Companion plugin for the [Stow](https://stow.rocks) iOS/macOS app. It has modules:
+
+- **qr**: a QR code with your Stash server credentials for easy setup in the app (below).
+- **operations**: server-side operations the app calls through Stash, see [Operations](#operations).
 
 ## Installation
 
@@ -10,7 +13,7 @@ Generate a QR code containing your Stash server credentials for easy setup in th
    - Enter: `https://plugins.stow.rocks/index.yml`
    - Click **Reload**
 
-2. Find "StowServerQR" and click **Install**
+2. Find "Stow" and click **Install**
 
 ## Usage
 
@@ -20,6 +23,18 @@ Generate a QR code containing your Stash server credentials for easy setup in th
 4. Click **📱 Stow QR** to display the QR code
 5. Scan it with a QR reader or a device camera
 6. If Stow has registered the `stow://` URL scheme, the link opens the app; Stow should ask before adding or updating a server
+
+## Operations
+
+The app calls the plugin with the GraphQL mutation `runPluginOperation(plugin_id: "stow", args: {op: "<name>", ...})` and gets the plugin's JSON output back. There is one entry point per plugin, so the operation name travels in `args.op`. The operation part is `stow.py` (Python 3, standard library only, no dependencies); Stash starts it for each call.
+
+| `op`     | Result                                                                                                                              |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `status` | `{"plugin": "stow", "version": "…", "capabilities": ["qr"]}`. The app uses `version` and `capabilities` to decide what it may call. |
+
+Errors come back as the GraphQL error of the mutation with a short message (`unknown operation`, `missing operation`).
+
+Development: `pnpm test` runs the JavaScript tests and the Python tests (`python3 -m unittest`). When you change `version` in `stow.yml`, change `VERSION` in `stow.py` too; a test checks that they match.
 
 ## Security
 

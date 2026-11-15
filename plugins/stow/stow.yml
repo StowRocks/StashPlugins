@@ -1,0 +1,23 @@
+name: Stow
+description: Companion plugin for the Stow app, QR setup for new servers and operations the app calls through Stash
+version: 1.1.0
+url: https://github.com/StowRocks/StashPlugins
+
+# Operations run through the GraphQL mutation runPluginOperation. There is one entry point per plugin,
+# the operation is chosen with args.op (see stow.py).
+exec:
+  - python3
+  - "{pluginDir}/stow.py"
+interface: raw
+
+tasks:
+  - name: Status
+    description: Show the plugin version and the capabilities this plugin offers
+    defaultArgs:
+      op: status
+
+ui:
+  javascript:
+    - stow-server-qr.js
+  css:
+    - stow-server-qr.css
