@@ -13,10 +13,18 @@ HERE = Path(__file__).parent
 
 class StatusTests(unittest.TestCase):
     def test_status_reports_version_and_capabilities(self):
-        result = stow.run({"args": {"op": "status"}})
+        with mock.patch("whisparr.configured", return_value=True):
+            result = stow.run({"args": {"op": "status"}})
         self.assertEqual(
             result,
-            {"output": {"plugin": "stow", "version": stow.VERSION, "capabilities": ["qr"]}},
+            {
+                "output": {
+                    "plugin": "stow",
+                    "version": stow.VERSION,
+                    "capabilities": ["qr", "whisparr"],
+                    "whisparrConfigured": True,
+                }
+            },
         )
 
     def test_version_matches_manifest(self):
@@ -50,7 +58,8 @@ class MainTests(unittest.TestCase):
         return json.loads(out.getvalue())
 
     def test_reads_stdin_and_prints_json(self):
-        result = self.call(json.dumps({"args": {"op": "status"}}))
+        with mock.patch("whisparr.configured", return_value=False):
+            result = self.call(json.dumps({"args": {"op": "status"}}))
         self.assertEqual(result["output"]["plugin"], "stow")
 
     def test_invalid_input_is_reported(self):

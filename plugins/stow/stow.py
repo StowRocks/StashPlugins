@@ -9,19 +9,28 @@ Standard library only, so the plugin works in the stock Stash image without inst
 import json
 import sys
 
+import whisparr
+
 # Keep in sync with `version` in stow.yml (a test checks it).
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 # What the app can rely on. Every module that is added gets its name here.
-CAPABILITIES = ["qr"]
+CAPABILITIES = ["qr", "whisparr"]
 
 
-def op_status(_args, _server_connection):
-    return {"plugin": "stow", "version": VERSION, "capabilities": CAPABILITIES}
+def op_status(_args, server_connection):
+    return {
+        "plugin": "stow",
+        "version": VERSION,
+        "capabilities": CAPABILITIES,
+        # whether Whisparr url and key are set in the plugin settings, so the app knows before it calls
+        "whisparrConfigured": whisparr.configured(server_connection),
+    }
 
 
 OPERATIONS = {
     "status": op_status,
+    "whisparr": whisparr.op_whisparr,
 }
 
 
