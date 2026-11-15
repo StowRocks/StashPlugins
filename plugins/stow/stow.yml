@@ -1,6 +1,6 @@
 name: Stow
 description: Companion plugin for the Stow app, QR setup for new servers and operations the app calls through Stash
-version: 1.2.0
+version: 1.3.0
 url: https://github.com/StowRocks/StashPlugins
 
 # Operations run through the GraphQL mutation runPluginOperation. There is one entry point per plugin,
@@ -13,7 +13,7 @@ interface: raw
 settings:
   whisparrUrl:
     displayName: Whisparr URL
-    description: Base URL of your Whisparr V3 instance as the Stash server reaches it, for example http://192.168.1.20:6969
+    description: Base URL of your Whisparr V3 instance as the Stash server reaches it, for example http://192.168.1.20:6969. Leave both fields empty to use the Whisparr settings of the Missing Scenes plugin.
     type: STRING
   whisparrApiKey:
     displayName: Whisparr API key
