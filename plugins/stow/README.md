@@ -28,9 +28,18 @@ Companion plugin for the [Stow](https://stow.rocks) iOS/macOS app. It has module
 
 The app calls the plugin with the GraphQL mutation `runPluginOperation(plugin_id: "stow", args: {op: "<name>", ...})` and gets the plugin's JSON output back. There is one entry point per plugin, so the operation name travels in `args.op`. The operation part is `stow.py` (Python 3, standard library only, no dependencies); Stash starts it for each call.
 
-| `op`     | Result                                                                                                                              |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `status` | `{"plugin": "stow", "version": "…", "capabilities": ["qr"]}`. The app uses `version` and `capabilities` to decide what it may call. |
+| `op`       | Result                                                                                                                                                                                                                                                                                        |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `status`   | `{"plugin": "stow", "version": "…", "capabilities": ["qr", "whisparr"], "whisparrConfigured": true}`. The app uses `version` and `capabilities` to decide what it may call, `whisparrConfigured` tells whether URL and key are set.                                                           |
+| `whisparr` | Forwards one request to your Whisparr V3 instance and returns `{"status": 200, "contentType": "…", "body": "<raw reply>"}`. Arguments: `method`, `path` (relative, for example `api/v3/movie`), `query` (list of `[name, value]` pairs, repeated names keep their order), `body` (JSON text). |
+
+### Whisparr module
+
+Set **Whisparr URL** and **Whisparr API key** under **Settings → Plugins → Stow**. Stow then talks to Whisparr through Stash instead of directly, so the key stays on the Stash server and Whisparr only has to be reachable from the Stash host. Without the plugin settings the Stow app falls back to a direct connection if one is configured.
+
+The operation is not an open proxy. It forwards only the requests the app makes: `ping`, `system/status`, `qualityprofile`, `rootfolder`, `tag`, `movie` (get, add, delete), `queue` (get, delete an entry), `performer` and `studio` (get, add, update). Everything else is refused before any request leaves the server. Status codes of Whisparr, including errors, are returned unchanged so the app keeps its own error handling.
+
+Stash shows plugin settings as plain text on the settings page, so anyone who can open Stash settings can read the Whisparr key.
 
 Errors come back as the GraphQL error of the mutation with a short message (`unknown operation`, `missing operation`).
 

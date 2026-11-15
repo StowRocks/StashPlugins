@@ -1,6 +1,6 @@
 name: Stow
 description: Companion plugin for the Stow app, QR setup for new servers and operations the app calls through Stash
-version: 1.1.0
+version: 1.2.0
 url: https://github.com/StowRocks/StashPlugins
 
 # Operations run through the GraphQL mutation runPluginOperation. There is one entry point per plugin,
@@ -9,6 +9,16 @@ exec:
   - python3
   - "{pluginDir}/stow.py"
 interface: raw
+
+settings:
+  whisparrUrl:
+    displayName: Whisparr URL
+    description: Base URL of your Whisparr V3 instance as the Stash server reaches it, for example http://192.168.1.20:6969
+    type: STRING
+  whisparrApiKey:
+    displayName: Whisparr API key
+    description: Whisparr, Settings, General, API Key. Stays on this server, the Stow app never receives it. Stash shows plugin settings as plain text.
+    type: STRING
 
 tasks:
   - name: Status
