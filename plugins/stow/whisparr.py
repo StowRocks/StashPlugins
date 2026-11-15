@@ -14,6 +14,9 @@ import urllib.parse
 import urllib.request
 
 PLUGIN_ID = "stow"
+# If Whisparr is not set up in this plugin, the access of the missing-scenes plugin is used: it holds the same two
+# settings (whisparrUrl, whisparrApiKey) and is usually set up first.
+FALLBACK_PLUGIN_ID = "missingScenes"
 TIMEOUT_SECONDS = 20
 
 # The requests the app makes, nothing else. Paths are relative to the Whisparr base URL.
@@ -53,8 +56,8 @@ def stash_url(connection):
     return f"{connection.get('Scheme') or 'http'}://{host}:{connection.get('Port') or 9999}/graphql"
 
 
-def read_settings(connection):
-    """The settings of this plugin from Stash (`configuration.plugins`)."""
+def read_all_settings(connection):
+    """The settings of all plugins from Stash (`configuration.plugins`), by plugin id."""
     payload = json.dumps({"query": "{ configuration { plugins } }"}).encode()
     headers = {"Content-Type": "application/json"}
     cookie = connection.get("SessionCookie") or {}
@@ -63,8 +66,36 @@ def read_settings(connection):
     request = urllib.request.Request(stash_url(connection), data=payload, headers=headers, method="POST")
     with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as reply:
         data = json.load(reply)
-    plugins = ((data.get("data") or {}).get("configuration") or {}).get("plugins") or {}
-    return plugins.get(PLUGIN_ID) or {}
+    return ((data.get("data") or {}).get("configuration") or {}).get("plugins") or {}
+
+
+def has_access(settings):
+    return bool((settings.get("whisparrUrl") or "").strip() and (settings.get("whisparrApiKey") or "").strip())
+
+
+def resolve(plugins):
+    """The Whisparr access to use and where it comes from: this plugin first, then the fallback plugin.
+    Address and key always come from the same plugin, never one from each."""
+    own = plugins.get(PLUGIN_ID) or {}
+    if has_access(own):
+        return own, PLUGIN_ID
+    other = plugins.get(FALLBACK_PLUGIN_ID) or {}
+    if has_access(other):
+        return {"whisparrUrl": other["whisparrUrl"], "whisparrApiKey": other["whisparrApiKey"]}, FALLBACK_PLUGIN_ID
+    return own, None
+
+
+def read_settings(connection):
+    """The Whisparr settings to use (see `resolve`)."""
+    return resolve(read_all_settings(connection))[0]
+
+
+def source(connection):
+    """The plugin whose Whisparr settings are used, or None. Never raises, `status` calls it."""
+    try:
+        return resolve(read_all_settings(connection))[1]
+    except Exception:
+        return None
 
 
 def base_url(settings):

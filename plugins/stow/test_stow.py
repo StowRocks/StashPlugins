@@ -13,7 +13,7 @@ HERE = Path(__file__).parent
 
 class StatusTests(unittest.TestCase):
     def test_status_reports_version_and_capabilities(self):
-        with mock.patch("whisparr.configured", return_value=True):
+        with mock.patch("whisparr.configured", return_value=True), mock.patch("whisparr.source", return_value="stow"):
             result = stow.run({"args": {"op": "status"}})
         self.assertEqual(
             result,
@@ -23,6 +23,7 @@ class StatusTests(unittest.TestCase):
                     "version": stow.VERSION,
                     "capabilities": ["qr", "whisparr"],
                     "whisparrConfigured": True,
+                    "whisparrSource": "stow",
                 }
             },
         )
@@ -58,7 +59,7 @@ class MainTests(unittest.TestCase):
         return json.loads(out.getvalue())
 
     def test_reads_stdin_and_prints_json(self):
-        with mock.patch("whisparr.configured", return_value=False):
+        with mock.patch("whisparr.configured", return_value=False), mock.patch("whisparr.source", return_value=None):
             result = self.call(json.dumps({"args": {"op": "status"}}))
         self.assertEqual(result["output"]["plugin"], "stow")
 

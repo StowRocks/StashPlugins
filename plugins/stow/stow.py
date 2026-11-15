@@ -12,7 +12,7 @@ import sys
 import whisparr
 
 # Keep in sync with `version` in stow.yml (a test checks it).
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 
 # What the app can rely on. Every module that is added gets its name here.
 CAPABILITIES = ["qr", "whisparr"]
@@ -25,6 +25,8 @@ def op_status(_args, server_connection):
         "capabilities": CAPABILITIES,
         # whether Whisparr url and key are set in the plugin settings, so the app knows before it calls
         "whisparrConfigured": whisparr.configured(server_connection),
+        # which plugin the Whisparr access comes from: "stow", "missingScenes" or null
+        "whisparrSource": whisparr.source(server_connection),
     }
 
 
