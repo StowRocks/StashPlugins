@@ -2,13 +2,12 @@
 
 ## Repository and published feed
 
-- Canonical repository: [StowRocks/StashPlugins](https://github.com/StowRocks/StashPlugins)
-- GitHub mirror: [StowRocks/StashPlugins](https://github.com/StowRocks/StashPlugins)
+- Repository: [StowRocks/StashPlugins](https://github.com/StowRocks/StashPlugins)
 - Plugin source feed: <https://plugins.stow.rocks/index.yml>
 - Plugin archive: <https://plugins.stow.rocks/stow.zip>
 - The Vercel project configuration builds the repository into `_site/`; the domain is `plugins.stow.rocks`.
 
-The plugin manifest links to the canonical repository above. To install it in Stash, add `https://plugins.stow.rocks/index.yml` under **Settings → Plugins → Available Plugins** and reload the source.
+The plugin manifest links to the repository above. To install it in Stash, add `https://plugins.stow.rocks/index.yml` under **Settings → Plugins → Available Plugins** and reload the source.
 
 ## Local development
 
