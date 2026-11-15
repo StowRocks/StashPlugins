@@ -19,18 +19,23 @@ Add this plugin source to Stash:
 
 ## Available Plugins
 
-### StowServerQR
+### Stow
 
-Generate a QR code containing your Stash server credentials for easy setup in the Stow iOS/macOS app.
+One plugin for the Stow app, with modules. Install it once, `stow`.
 
-**Features:**
+**Modules:**
+
+- `qr`: generate a QR code containing your Stash server credentials for easy setup in the Stow iOS/macOS app.
+- Operations the app calls through Stash (`runPluginOperation`, chosen with `args.op`). Today `status` (plugin version and capabilities), more follow with the Whisparr module. See the plugin documentation.
+
+**QR features:**
 
 - Auto-detects server URL
 - Reads the API key displayed in Stash's Security settings page
 - Shows a security warning and visually hides the QR panel after 60 seconds
 - Encodes a `stow://add-server` handoff for the Stow app
 
-[Documentation](plugins/stowServerQR/README.md)
+[Documentation](plugins/stow/README.md)
 
 ## Development
 

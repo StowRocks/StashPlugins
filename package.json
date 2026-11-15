@@ -9,11 +9,12 @@
   },
   "scripts": {
     "build": "node build.js",
-    "build:check": "pnpm build && git diff --exit-code -- plugins/stowServerQR/stow-server-qr.js",
+    "build:check": "pnpm build && git diff --exit-code -- plugins/stow/stow-server-qr.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
-    "test": "vitest run --coverage",
+    "test": "vitest run --coverage && pnpm test:py",
+    "test:py": "python3 -m unittest discover -s plugins/stow -p 'test_*.py'",
     "prepare": "lefthook install"
   },
   "devDependencies": {

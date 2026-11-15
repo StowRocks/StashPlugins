@@ -71,7 +71,7 @@ for (const pluginId of pluginDirs) {
     "**/*",
     {
       cwd: pluginDir,
-      ignore: ["*.src.js"],
+      ignore: ["*.src.js", "test_*.py", "__pycache__/**"],
     },
     { date: buildDate },
   );

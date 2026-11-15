@@ -4,7 +4,7 @@ import { encodeServerPayload } from "../../src/qr-payload.js";
 (function () {
   "use strict";
 
-  const PLUGIN_ID = "stowServerQR";
+  const PLUGIN_ID = "stow";
   let qrVisible = false;
   let hideTimer = null;
   let injected = false;

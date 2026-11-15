@@ -1,6 +1,6 @@
 # Stow App: QR Code Server Setup
 
-The **StowServerQR** Stash plugin adds a button to **Settings → Security**. It creates a `stow://` deep link carrying a server name, URL, and API key. The Stow app must register the URL scheme and handle the link before scanning can open the app.
+The `qr` module of the **Stow** Stash plugin adds a button to **Settings → Security**. It creates a `stow://` deep link carrying a server name, URL, and API key. The Stow app must register the URL scheme and handle the link before scanning can open the app.
 
 ## Current plugin payload
 
