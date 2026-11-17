@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 import QRCode from "qrcode";
 import { encodeServerPayload } from "../../src/qr-payload.js";
 

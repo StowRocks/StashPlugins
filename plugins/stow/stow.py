@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """Operations of the Stow plugin.
 
 Stash starts this script for every call of runPluginOperation (or a task). It reads the plugin input as JSON
