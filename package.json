@@ -14,7 +14,7 @@
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "test": "vitest run --coverage && pnpm test:py",
-    "test:py": "python3 -m unittest discover -s plugins/stow -p 'test_*.py'",
+    "test:py": "python3 -m unittest discover -s plugins/stow -p 'test_*.py' && python3 -m unittest discover -s .github/scripts -p 'test_*.py'",
     "prepare": "lefthook install"
   },
   "devDependencies": {

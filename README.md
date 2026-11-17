@@ -133,4 +133,4 @@ When you change `version` in `stow.yml`, change `VERSION` in `stow.py` too. A te
 
 ## License
 
-[GPL-3.0-only](LICENSE). Every source file carries an `SPDX-License-Identifier` header.
+[GPL-3.0-only](LICENSE). Every source file carries an `SPDX-License-Identifier` header. Contributions are accepted under the [Contribution Licence](CONTRIBUTION-LICENSE.md) ([Deutsch](CONTRIBUTION-LICENSE.de.md)); see [CONTRIBUTING.md](CONTRIBUTING.md).
