@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-only
 """Whisparr module of the Stow plugin.
 
 The app speaks the Whisparr V3 REST API through Stash: one operation, `whisparr`, forwards a request to the
