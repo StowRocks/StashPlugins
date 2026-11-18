@@ -88,4 +88,4 @@ The current browser implementation uses `btoa` on the JSON string. Server names 
 
 ## License
 
-The plugin is proprietary. No license is granted except under a separate written agreement; see the repository [LICENSE](../../LICENSE).
+The plugin is licensed under [GPL-3.0-only](../../LICENSE). Contributions are accepted under the [Contribution Licence](../../CONTRIBUTION-LICENSE.md); see [CONTRIBUTING.md](../../CONTRIBUTING.md).

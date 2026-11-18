@@ -99,4 +99,4 @@ Before saving, show the server name and URL, mask the API key, and ask the user 
 
 ## Repository and license
 
-Plugin source: [StowRocks/StashPlugins](https://github.com/StowRocks/StashPlugins). The project is proprietary. No license is granted except under a separate written agreement; see [LICENSE](LICENSE).
+Plugin source: [StowRocks/StashPlugins](https://github.com/StowRocks/StashPlugins). The project is licensed under [GPL-3.0-only](LICENSE). Contributions are accepted under the [Contribution Licence](CONTRIBUTION-LICENSE.md); see [CONTRIBUTING.md](CONTRIBUTING.md).

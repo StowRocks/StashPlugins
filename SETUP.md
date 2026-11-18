@@ -30,4 +30,4 @@ Base64 does not encrypt the API key. The plugin warns users and visually hides t
 
 ## License status
 
-The project is proprietary. No license is granted except under a separate written agreement; see [LICENSE](LICENSE).
+The project is licensed under [GPL-3.0-only](LICENSE). Contributions are accepted under the [Contribution Licence](CONTRIBUTION-LICENSE.md); see [CONTRIBUTING.md](CONTRIBUTING.md).
