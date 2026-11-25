@@ -5,3 +5,9 @@ export function encodeServerPayload(payload) {
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary);
 }
+
+export function buildServerDeepLink(payload) {
+  return (
+    "stow://add-server?data=" + encodeURIComponent(encodeServerPayload(payload))
+  );
+}
