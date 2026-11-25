@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 import QRCode from "qrcode";
-import { encodeServerPayload } from "../../src/qr-payload.js";
+import { buildServerDeepLink } from "../../src/qr-payload.js";
 
 (function () {
   "use strict";
@@ -60,7 +60,7 @@ import { encodeServerPayload } from "../../src/qr-payload.js";
       apiKey,
     };
 
-    const qrContent = "stow://add-server?data=" + encodeServerPayload(data);
+    const qrContent = buildServerDeepLink(data);
     const generation = ++qrGeneration;
 
     const codeEl = document.getElementById("stow-qr-code");
