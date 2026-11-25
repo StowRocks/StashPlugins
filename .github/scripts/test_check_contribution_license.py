@@ -72,6 +72,14 @@ class DeclarationTests(unittest.TestCase):
         msg = "fix: z\n\nCo-authored-by: dependabot[bot] <bot@example.org>"
         self.assertEqual(mod.check(pr(), [commit(message=msg)], OWNERS), [])
 
+    def test_bot_substring_in_human_name_still_requires_sign_off(self):
+        msg = "fix: z\n\nCo-authored-by: Alice [bot] Fan <alice@example.org>"
+        self.assertTrue(mod.check(pr(), [commit(message=msg)], OWNERS))
+
+    def test_maintainer_pr_still_checks_third_party_commits(self):
+        third_party = commit("bob", "bob@example.org", "fix: external")
+        self.assertTrue(mod.check(pr("metaneutrons", body=""), [third_party], OWNERS))
+
     def test_commit_by_maintainer_in_foreign_pr_passes(self):
         owner = commit("metaneutrons", "owner@example.org")
         self.assertEqual(mod.check(pr(), [commit(), owner], OWNERS), [])

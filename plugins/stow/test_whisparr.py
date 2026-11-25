@@ -92,6 +92,7 @@ class ForwardTests(unittest.TestCase):
             ("GET", "api/v3/config/host"),
             ("DELETE", "api/v3/movie"),
             ("DELETE", "api/v3/movie/1/../../config"),
+            ("DELETE", "api/v3/movie/\u0661\u0662"),
             ("POST", "api/v3/queue"),
             ("GET", "../../etc/passwd"),
             ("PATCH", "api/v3/movie"),
@@ -101,6 +102,47 @@ class ForwardTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     whisparr.forward(self.settings, {"method": method, "path": path})
         self.assertEqual(FakeWhisparr.seen, [])
+
+    def test_redirects_are_not_followed_and_api_key_is_not_replayed(self):
+        class RedirectHandler(BaseHTTPRequestHandler):
+            def log_message(self, *_args):
+                pass
+
+            def do_GET(self):
+                self.send_response(302)
+                self.send_header("Location", "http://127.0.0.1:9/evil")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+
+        srv = HTTPServer(("127.0.0.1", 0), RedirectHandler)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        try:
+            reply = whisparr.forward(
+                {"whisparrUrl": f"http://127.0.0.1:{srv.server_port}/", "whisparrApiKey": "secret"},
+                {"method": "GET", "path": "api/v3/movie"},
+            )
+            self.assertEqual(reply["status"], 302)
+        finally:
+            srv.shutdown()
+            srv.server_close()
+
+    def test_oversized_response_is_rejected(self):
+        class DummyReply:
+            status = 200
+            headers = {"Content-Type": "application/json"}
+
+            def read(self, n=-1):
+                return b"x" * (n if n > 0 else 16)
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+        with mock.patch.object(whisparr._NO_REDIRECT_OPENER, "open", return_value=DummyReply()):
+            with self.assertRaises(ValueError):
+                whisparr.forward(self.settings, {"method": "GET", "path": "ping"})
 
     def test_an_unreachable_server_is_a_connection_error(self):
         settings = {"whisparrUrl": "http://127.0.0.1:1/", "whisparrApiKey": "k"}

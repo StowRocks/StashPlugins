@@ -9,16 +9,28 @@ import { encodeServerPayload } from "../../src/qr-payload.js";
   let qrVisible = false;
   let hideTimer = null;
   let injected = false;
+  let qrGeneration = 0;
 
   function getServerName() {
-    return localStorage.getItem(`${PLUGIN_ID}_serverName`) || location.hostname;
+    try {
+      return (
+        localStorage.getItem(`${PLUGIN_ID}_serverName`) || location.hostname
+      );
+    } catch {
+      return location.hostname;
+    }
   }
 
   function setServerName(name) {
-    localStorage.setItem(`${PLUGIN_ID}_serverName`, name);
+    try {
+      localStorage.setItem(`${PLUGIN_ID}_serverName`, name);
+    } catch {
+      // Ignore storage quota or private-browsing failures.
+    }
   }
 
   function hideQR() {
+    qrGeneration += 1;
     if (hideTimer) clearTimeout(hideTimer);
     hideTimer = null;
     const panel = document.getElementById("stow-qr-panel");
@@ -49,9 +61,10 @@ import { encodeServerPayload } from "../../src/qr-payload.js";
     };
 
     const qrContent = "stow://add-server?data=" + encodeServerPayload(data);
+    const generation = ++qrGeneration;
 
     const codeEl = document.getElementById("stow-qr-code");
-    codeEl.innerHTML = "";
+    if (codeEl) codeEl.replaceChildren();
 
     let canvas;
     try {
@@ -65,17 +78,32 @@ import { encodeServerPayload } from "../../src/qr-payload.js";
       window.alert("The QR code could not be generated.");
       return;
     }
-    codeEl.appendChild(canvas);
 
-    document.getElementById("stow-qr-panel").style.display = "";
-    document.getElementById("stow-qr-btn").style.display = "none";
+    const liveCodeEl = document.getElementById("stow-qr-code");
+    const panel = document.getElementById("stow-qr-panel");
+    const btn = document.getElementById("stow-qr-btn");
+    const timerEl = document.getElementById("stow-qr-timer");
+    if (
+      generation !== qrGeneration ||
+      !liveCodeEl?.isConnected ||
+      !panel?.isConnected
+    ) {
+      return;
+    }
+
+    liveCodeEl.replaceChildren(canvas);
+    panel.style.display = "";
+    if (btn) btn.style.display = "none";
     qrVisible = true;
 
     // Auto-hide countdown
     if (hideTimer) clearTimeout(hideTimer);
     let seconds = 60;
-    const timerEl = document.getElementById("stow-qr-timer");
     const tick = () => {
+      if (generation !== qrGeneration || !timerEl?.isConnected) {
+        hideTimer = null;
+        return;
+      }
       timerEl.textContent = `Auto-hiding in ${seconds}s`;
       if (seconds-- <= 0) return hideQR();
       hideTimer = setTimeout(tick, 1000);
@@ -95,6 +123,10 @@ import { encodeServerPayload } from "../../src/qr-payload.js";
     const btnContainer = buttons.length
       ? buttons[0].parentElement
       : apiKeyDiv.querySelector("div:last-child");
+    if (!btnContainer) {
+      injected = false;
+      return;
+    }
     const btn = document.createElement("button");
     btn.id = "stow-qr-btn";
     btn.className = "btn btn-primary stow-qr-btn";
@@ -138,6 +170,9 @@ import { encodeServerPayload } from "../../src/qr-payload.js";
     if (document.getElementById("apikey")) {
       inject();
     } else {
+      if (injected || qrVisible || hideTimer) {
+        hideQR();
+      }
       injected = false;
     }
   });
