@@ -19,6 +19,7 @@ PLUGIN_ID = "stow"
 # settings (whisparrUrl, whisparrApiKey) and is usually set up first.
 FALLBACK_PLUGIN_ID = "missingScenes"
 TIMEOUT_SECONDS = 20
+MAX_RESPONSE_BYTES = 10 * 1024 * 1024
 
 # The requests the app makes, nothing else. Paths are relative to the Whisparr base URL.
 ALLOWED = [
@@ -35,10 +36,25 @@ ALLOWED = [
     ("GET", r"api/v3/(performer|studio)/\d+"),
     ("PUT", r"api/v3/(performer|studio)/\d+"),
 ]
-_ALLOWED = [(method, re.compile(pattern)) for method, pattern in ALLOWED]
+_ALLOWED = [(method, re.compile(pattern, re.ASCII)) for method, pattern in ALLOWED]
 
 # `ping` is anonymous in Whisparr, so the key is not sent with it.
 _ANONYMOUS = {"ping"}
+
+
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+_NO_REDIRECT_OPENER = urllib.request.build_opener(_NoRedirectHandler)
+
+
+def _read_bounded(reply, limit=MAX_RESPONSE_BYTES):
+    raw = reply.read(limit + 1)
+    if len(raw) > limit:
+        raise ValueError(f"Whisparr response exceeded {limit} bytes")
+    return raw
 
 
 class WhisparrNotConfigured(Exception):
@@ -132,11 +148,11 @@ def forward(settings, args):
 
     request = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as reply:
-            return _result(reply.status, reply.headers, reply.read())
+        with _NO_REDIRECT_OPENER.open(request, timeout=TIMEOUT_SECONDS) as reply:
+            return _result(reply.status, reply.headers, _read_bounded(reply))
     except urllib.error.HTTPError as error:
         with error:
-            return _result(error.code, error.headers, error.read())
+            return _result(error.code, error.headers, _read_bounded(error))
     except urllib.error.URLError as error:
         raise ConnectionError(f"Whisparr is not reachable: {error.reason}") from error
 
@@ -151,6 +167,21 @@ def _result(status, headers, raw):
 
 def op_whisparr(args, server_connection):
     return forward(read_settings(server_connection), args)
+
+
+def read_state(server_connection):
+    """Return (configured, source_plugin_id) from one Stash GraphQL settings query."""
+    try:
+        settings, src = resolve(read_all_settings(server_connection))
+    except Exception:
+        return False, None
+    if src is None:
+        return False, None
+    try:
+        base_url(settings)
+        return True, src
+    except WhisparrNotConfigured:
+        return False, None
 
 
 def configured(server_connection):

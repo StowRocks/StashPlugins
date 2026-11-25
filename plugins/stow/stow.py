@@ -20,14 +20,15 @@ CAPABILITIES = ["qr", "whisparr"]
 
 
 def op_status(_args, server_connection):
+    whisparr_configured, whisparr_source = whisparr.read_state(server_connection)
     return {
         "plugin": "stow",
         "version": VERSION,
         "capabilities": CAPABILITIES,
         # whether Whisparr url and key are set in the plugin settings, so the app knows before it calls
-        "whisparrConfigured": whisparr.configured(server_connection),
+        "whisparrConfigured": whisparr_configured,
         # which plugin the Whisparr access comes from: "stow", "missingScenes" or null
-        "whisparrSource": whisparr.source(server_connection),
+        "whisparrSource": whisparr_source,
     }
 
 

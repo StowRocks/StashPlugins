@@ -32,10 +32,10 @@ def is_bot(login, kind=None):
 
 def check(pr, commits, maintainers):
     author = (pr.get("user") or {}).get("login")
-    if is_bot(author, (pr.get("user") or {}).get("type")) or author in maintainers:
+    if is_bot(author, (pr.get("user") or {}).get("type")):
         return []
     problems = []
-    if not BOX.search(pr.get("body") or ""):
+    if author not in maintainers and not BOX.search(pr.get("body") or ""):
         problems.append("The pull request description lacks the ticked box '%s'. Tick it in the template or add:\n"
                         "- [x] I have read CONTRIBUTION-LICENSE.md (%s) and license this contribution under its terms."
                         % (MARKER, MARKER))
@@ -49,7 +49,7 @@ def check(pr, commits, maintainers):
             problems.append("Commit %s is by %s, who is not the pull request author: add 'Signed-off-by: Name <%s>'."
                             % (short, login or email or "an unknown author", email))
         for name, mail in COAUTHOR.findall(msg):
-            if "[bot]" in name.lower() or mail.lower() in signed:
+            if is_bot(name) or mail.lower() in signed:
                 continue
             problems.append("Commit %s names %s as co-author: add 'Signed-off-by: %s <%s>'." % (short, name, name, mail))
     return problems

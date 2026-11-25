@@ -13,7 +13,7 @@ HERE = Path(__file__).parent
 
 class StatusTests(unittest.TestCase):
     def test_status_reports_version_and_capabilities(self):
-        with mock.patch("whisparr.configured", return_value=True), mock.patch("whisparr.source", return_value="stow"):
+        with mock.patch("whisparr.read_state", return_value=(True, "stow")):
             result = stow.run({"args": {"op": "status"}})
         self.assertEqual(
             result,
@@ -27,6 +27,14 @@ class StatusTests(unittest.TestCase):
                 }
             },
         )
+
+    def test_status_reads_stash_settings_at_most_once(self):
+        plugins = {"stow": {"whisparrUrl": "http://w:6969", "whisparrApiKey": "k"}}
+        with mock.patch("whisparr.read_all_settings", return_value=plugins) as read_all:
+            result = stow.run({"args": {"op": "status"}})
+        self.assertEqual(read_all.call_count, 1)
+        self.assertTrue(result["output"]["whisparrConfigured"])
+        self.assertEqual(result["output"]["whisparrSource"], "stow")
 
     def test_version_matches_manifest(self):
         manifest = (HERE / "stow.yml").read_text(encoding="utf-8")
@@ -59,7 +67,7 @@ class MainTests(unittest.TestCase):
         return json.loads(out.getvalue())
 
     def test_reads_stdin_and_prints_json(self):
-        with mock.patch("whisparr.configured", return_value=False), mock.patch("whisparr.source", return_value=None):
+        with mock.patch("whisparr.read_state", return_value=(False, None)):
             result = self.call(json.dumps({"args": {"op": "status"}}))
         self.assertEqual(result["output"]["plugin"], "stow")
 
